@@ -109,7 +109,7 @@ def readKBA(kbaDict):
             try:
                 suff = 1
                 imgUrl = img.get('src')
-                                if not (('https://aura.support.neo4j.com/' in imgUrl) or ('https://neotechnology.zendesk.com/' in imgUrl)) or ('support.neo4j.com' in imgUrl) :
+                if not (('https://aura.support.neo4j.com/' in imgUrl) or ('https://neotechnology.zendesk.com/' in imgUrl)) or ('support.neo4j.com' in imgUrl) :
                     externalImages.append(imgUrl)                
                 fileName = img.get('alt')
                 if (fileName is None) or ('image width=' in fileName):
