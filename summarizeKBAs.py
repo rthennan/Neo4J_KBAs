@@ -6,9 +6,7 @@ I've skipped multiple one-liners/short hand stuff on purpose to make the code mo
 Endpoint for listing all articles: 
     GET /api/v2/help_center{/locale}/articles
 For Neo4j Arua:
-    GET https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/
-For Neo4j OnPrem    
-    GET https://support.neo4j.com/api/v2/help_center/en-us/articles/    
+    GET https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/   
 """
 
 import requests
@@ -169,8 +167,7 @@ def readKBA(kbaDict):
         return {'status':False}
 
 currentpage = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/'
-oneArticleURL = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles.json?page=1&per_page=1'
-#currentpage = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles.json?page=1&per_page=30'    
+oneArticleURL = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles.json?page=1&per_page=1' 
 startedTime = dt.now()
 msg = 'Execution Started'
 log(msg)
