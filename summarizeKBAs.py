@@ -7,6 +7,8 @@ Endpoint for listing all articles:
     GET /api/v2/help_center{/locale}/articles
 For Neo4j Arua:
     GET https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/
+For Neo4j OnPrem    
+    GET https://support.neo4j.com/api/v2/help_center/en-us/articles/    
 """
 
 import requests
@@ -107,7 +109,7 @@ def readKBA(kbaDict):
             try:
                 suff = 1
                 imgUrl = img.get('src')
-                if not (('https://aura.support.neo4j.com/' in imgUrl) or ('https://neotechnology.zendesk.com/' in imgUrl)) :
+                                if not (('https://aura.support.neo4j.com/' in imgUrl) or ('https://neotechnology.zendesk.com/' in imgUrl)) or ('support.neo4j.com' in imgUrl) :
                     externalImages.append(imgUrl)                
                 fileName = img.get('alt')
                 if (fileName is None) or ('image width=' in fileName):
