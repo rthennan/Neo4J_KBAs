@@ -9,20 +9,24 @@ For Neo4j Arua:
     GET https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/   
 """
 
-import requests
+print('Importing packages')
+import pandas as pd #pip install pandas
 import bs4 as bs # pip install BeautifulSoup4
+import nltk #pip install nltk
+nltk.download('punkt',quiet=True)
+import requests
 from os import path,makedirs, listdir
 import shutil 
 from datetime import timezone as tz
 from datetime import date
 from datetime import datetime as dt
-import pandas as pd #pip install pandas
 import time
 import warnings
 import traceback
+
 warnings.filterwarnings("ignore")
 '''
-Change summaryFile, keyWordsToMatch and caseInsensitive if requies#
+Change summaryFile and caseInsensitive if requies#
 '''
 
 keyWordsToMatch = []
@@ -31,7 +35,7 @@ keyWordsToMatch = []
 #keyWordsToMatch = ['deprecated','Hello','HI','secuRIty','dbms']
 
 #Rename the output file's name if desired. DO NOT INCLUDE THE FILE EXTENSION
-summaryFile='kbaSummary'
+summaryFile='kbSummary'
 #The keyword match is case insesitive by default. Change True to False to make the search case sensitive
 caseInsensitive = True
 
@@ -46,15 +50,13 @@ if not keyWordsToMatch:
         print('The keyword match is case insensitive.')
     else:
         print('The keyword match IS CASE SENSITIVE.')
-    print('Once you have entered all the keywords,Hit Enter TWICE')
+    print('Once you have entered all the keywords,Hit Enter TWICE \n')
     while True:
         line = input()
         if line:
             keyWordsToMatch.append(line)
         else:
             break
-
-
 headers = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
 }
@@ -68,7 +70,7 @@ if not path.exists(logsDir):
     makedirs(logsDir)          
 
 def log(txt): 
-    logFile = path.join(logsDir,str(date.today())+'_kbaSummarylogs.log')
+    logFile = path.join(logsDir,str(date.today())+'_kbSummarylogs.log')
     logMsg = '\n'+str(dt.now())+'    ' + str(txt)
     with open(logFile,'a') as f:
         f.write(logMsg) 
@@ -107,7 +109,7 @@ def readKBA(kbaDict):
             try:
                 suff = 1
                 imgUrl = img.get('src')
-                if not (('https://aura.support.neo4j.com/' in imgUrl) or ('https://neotechnology.zendesk.com/' in imgUrl)) or ('support.neo4j.com' in imgUrl) :
+                if not (('support.neo4j.com' in imgUrl) or ('neotechnology.zendesk.com' in imgUrl)) :
                     externalImages.append(imgUrl)                
                 fileName = img.get('alt')
                 if (fileName is None) or ('image width=' in fileName):
@@ -143,17 +145,13 @@ def readKBA(kbaDict):
         texts = soup.findAll(text=True)
         texts = u" ".join(t.strip() for t in texts)
         if caseInsensitive:
-            texts = texts.lower()
-           
-        keyWordMatched = []
-        if caseInsensitive:
             for i, keyWord in enumerate(keyWordsToMatch):
-                keyWordsToMatch[i] = keyWord.lower()  
+                keyWordsToMatch[i] = keyWord.lower() 
+            texts = texts.lower()      
+        texts = nltk.tokenize.word_tokenize(texts)
+        keyWordMatched = []            
         for keyWord in keyWordsToMatch:
-            if (f" {keyWord} " in texts) \
-                or (f" {keyWord}." in texts) or (f".{keyWord} " in texts) or (f".{keyWord}." in texts) \
-                or (f" {keyWord}," in texts) or (f",{keyWord} " in texts) or (f",{keyWord}," in texts): 
-                #Could be simplified with regex
+            if keyWord in texts:
                 keyWordMatched.append(keyWord)
         keyWordMatched = ", ".join([word for word in keyWordMatched])
         return {'status':True,'kbaID':kbaID, 'kbaURL':kbaURL, 'kbaTitle':kbaTitle, 'kbaTitleLength':kbaTitleLength,
@@ -165,6 +163,7 @@ def readKBA(kbaDict):
         printer(msg)
         log(msg)
         return {'status':False}
+log(f"\nKeywords Entered by the user to match -> {keyWordsToMatch}\n ")
 
 currentpage = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles/'
 oneArticleURL = 'https://neo4jaura.zendesk.com/api/v2/help_center/en-us/articles.json?page=1&per_page=1' 
@@ -181,7 +180,7 @@ msg = f'Total number of Articles -> {articleCount}'
 log(msg)
 printer(msg)
 
-summaryFile = summaryFile+'.xlsx'    
+
 cols = [ 'kbaID','kbaURL','kbaTitle','kbaTitleLength','createdAgeInDays', 
         'updateAgeInDays', 'outdated','voteSum', 'voteCount',
         'negativeVotes',  'kbaLabels','kbaLabelCount',
@@ -205,7 +204,8 @@ while currentpage is not None:
     log(msg)
     printer(msg)        
     currentpage = getArticles.get('next_page',None)   
-kbaSummary.to_excel(summaryFile,index=False)    
+summaryFile = f"{summaryFile}_{date.today().strftime('%d%b%Y')}.csv"    
+kbaSummary.to_csv(summaryFile,index=False)    
 ended = time.time()    
 endedTime = dt.now()
 if failedKBAs >0:
