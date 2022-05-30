@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Apr 25 11:58:51 2022
-@author: Rajesh
-I've skipped multiple one-liners/short hand stuff on purpose to make the code more readable.
 Endpoint for listing all articles: 
     GET /api/v2/help_center{/locale}/articles
 For Neo4j Arua:
@@ -10,9 +8,22 @@ For Neo4j Arua:
 """
 
 print('Importing packages')
-import pandas as pd #pip install pandas
-import bs4 as bs # pip install BeautifulSoup4
-import nltk #pip install nltk
+try:
+    import pandas as pd #pip install pandas
+except:
+    print('\nPackage "pandas" not found. Please install it by running "pip install pandas" and re-run this code')
+    exit()    
+try:
+    import bs4 as bs # pip install BeautifulSoup4
+except:
+    print('\nPackage "bs4/BeautifulSoup" not found. Please install it by running "pip install BeautifulSoup4" and re-run this code')
+    exit()    
+
+try:
+    import nltk #pip install nltk
+except:
+    print('\nPackage "nltk" not found. Please install it by running "pip install nltk" and re-run this code')
+    exit()     
 nltk.download('punkt',quiet=True)
 import requests
 from os import path,makedirs, listdir
@@ -29,34 +40,38 @@ warnings.filterwarnings("ignore")
 Change summaryFile and caseInsensitive if requies#
 '''
 
-keyWordsToMatch = []
-#Whole word matches with leading or lagging space, periods or commas.
-#Uncomment teh next line and add desired keywords here. Else you'll be prompted to enter them
-#keyWordsToMatch = ['deprecated','Hello','HI','secuRIty','dbms']
-
 #Rename the output file's name if desired. DO NOT INCLUDE THE FILE EXTENSION
 summaryFile='kbSummary'
-#The keyword match is case insesitive by default. Change True to False to make the search case sensitive
-caseInsensitive = True
 
+print('\nIf you want this to be case sensitive, please type "Yes" or "YES" or "Y" and hit Return/Enter once')
+print('Else just hit Return/Enter once, to keep the search case insensitive\n')
+caseIn =input()
 
-
-### Nothing to change Below ###
-### Nothing to change Below ###
-### Nothing to change Below ###
-if not keyWordsToMatch:
-    print('Enter the keywords to search for, one by one, followed by the Enter key.')
-    if caseInsensitive:
-        print('The keyword match is case insensitive.')
+try:
+    if caseIn[0].lower() == 'y':
+        caseSensitive = True
     else:
-        print('The keyword match IS CASE SENSITIVE.')
-    print('Once you have entered all the keywords,Hit Enter TWICE \n')
-    while True:
-        line = input()
-        if line:
-            keyWordsToMatch.append(line)
-        else:
-            break
+        caseSensitive = False
+except:
+    caseSensitive = False       
+
+if caseSensitive:
+    print('\nThis keyword match IS case SENSITIVE.') 
+else:
+    print('\nThis keyword match is NOT case SENSITIVE.')
+
+### Nothing to change Below ###
+### Nothing to change Below ###
+### Nothing to change Below ###
+keyWordsToMatch = []
+print('\nEnter the keywords to search for, one by one, followed by the Return/Enter key.')
+print('Once you have entered all the keywords,Hit Enter TWICE \n')
+while True:
+    line = input()
+    if line:
+        keyWordsToMatch.append(line)
+    else:
+        break
 headers = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
 }
@@ -144,7 +159,7 @@ def readKBA(kbaDict):
         #Get Plain Text of body and search for desired keyword?        
         texts = soup.findAll(text=True)
         texts = u" ".join(t.strip() for t in texts)
-        if caseInsensitive:
+        if not caseSensitive:
             for i, keyWord in enumerate(keyWordsToMatch):
                 keyWordsToMatch[i] = keyWord.lower() 
             texts = texts.lower()      
@@ -203,8 +218,12 @@ while currentpage is not None:
     msg = f"Finished Reading page {getArticles.get('page')} of {getArticles.get('page_count')}."
     log(msg)
     printer(msg)        
-    currentpage = getArticles.get('next_page',None)   
-summaryFile = f"{summaryFile}_{date.today().strftime('%d%b%Y')}.csv"    
+    currentpage = getArticles.get('next_page',None)
+
+if caseSensitive:
+    summaryFile = f"{summaryFile}_{date.today().strftime('%d%b%Y')}_caseSens.csv" 
+else:
+    summaryFile = f"{summaryFile}_{date.today().strftime('%d%b%Y')}_notCaseSens.csv" 
 kbaSummary.to_csv(summaryFile,index=False)    
 ended = time.time()    
 endedTime = dt.now()
